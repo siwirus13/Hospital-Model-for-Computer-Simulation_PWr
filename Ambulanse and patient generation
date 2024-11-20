@@ -14,8 +14,8 @@ def ambulanse(patient_prob):
 def patient_generation(new_patients):
     patients = []
     for patient in range(new_patients):
-            patient_type = random.choices([1, 2, 3, 4],
-            weights=[0.05, 0.20, 0.50, 0.25],
+            patient_type = random.choices(['green', 'yellow','orange', 'red'],
+            weights=[0.25, 0.50, 0.20, 0.05],
             k=1
             )[0]
             patients.append(patient_type)
