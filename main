@@ -1,0 +1,111 @@
+import random
+
+# Zmienne globalne
+patient_prob = 0.7
+beds = 10
+endtime = 100
+
+# Liczniki globalne
+hospitalized = []
+waiting = []
+deaths = 0
+recoveries = 0
+
+
+def ambulanse(patient_prob):
+    new_patients = 0
+    while True:
+        if random.random() < patient_prob:
+            new_patients += 1
+        else:
+            break
+    return patient_generation(new_patients)
+
+
+def patient_generation(new_patients):
+    patients = []
+    for _ in range(new_patients):
+        patient_type = random.choices(
+            ['green', 'yellow', 'orange', 'red'],
+            weights=[0.25, 0.50, 0.20, 0.05],
+            k=1
+        )[0]
+        patients.append([patient_type])  # Użyj listy zamiast krotki
+    return patients
+
+
+def state_change():
+    global recoveries, deaths
+
+    for patient in hospitalized:
+        if patient[0] == 'green':
+            if random.random() < 0.1:
+                patient[0] = 'yellow'  # getting worse
+            elif random.random() < 0.3:
+                recoveries += 1  # recovering
+                hospitalized.remove(patient)
+        elif patient[0] == 'yellow':
+            if random.random() < 0.3:
+                patient[0] = 'orange'  # getting worse
+            elif random.random() < 0.6:
+                patient[0] = 'green'  # getting better
+                print("Patient is getting better")
+        elif patient[0] == 'orange':
+            if random.random() < 0.4:
+                patient[0] = 'red'  # getting worse
+            elif random.random() < 0.7:
+                patient[0] = 'yellow'  # getting better
+                print("Patient is getting better")
+        elif patient[0] == 'red':
+            if random.random() < 0.5:
+                deaths += 1  # dying
+                hospitalized.remove(patient)
+            elif random.random() < 0.8:
+                patient[0] = 'orange'  # getting better
+                print("Patient is getting better")
+
+    for patient in waiting:
+        if patient[0] == 'green':
+            if random.random() < 0.1:
+                patient[0] = 'yellow'  # getting worse
+            elif random.random() < 0.3:
+                recoveries += 1  # recovering
+                waiting.remove(patient)
+        elif patient[0] == 'yellow':
+            if random.random() < 0.3:
+                patient[0] = 'orange'  # getting worse
+            elif random.random() < 0.6:
+                patient[0] = 'green'  # getting better
+                print("Patient is getting better")
+        elif patient[0] == 'orange':
+            if random.random() < 0.4:
+                patient[0] = 'red'  # getting worse
+            elif random.random() < 0.7:
+                patient[0] = 'yellow'  # getting better
+                print("Patient is getting better")
+        elif patient[0] == 'red':
+            if random.random() < 0.5:
+                deaths += 1  # dying
+                waiting.remove(patient)
+
+
+def simulation(endtime, beds, patient_prob):
+    global recoveries, deaths
+
+    for time in range(endtime):
+        print(f"\nTime step {time + 1}:")
+        state_change()
+        new_patients = ambulanse(patient_prob)
+
+        for patient in new_patients:
+            if len(hospitalized) < beds:
+                hospitalized.append(patient)
+            else:
+                waiting.append(patient)
+
+        print(f"Hospitalized: {hospitalized}")
+        print(f"Waiting: {waiting}")
+        print(f"Recoveries: {recoveries}, Deaths: {deaths}")
+
+
+simulation(endtime, beds, patient_prob)
