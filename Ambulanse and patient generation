@@ -1,0 +1,23 @@
+def ambulanse(patient_prob):
+    new_patients = 0
+
+    while True:
+        not_so_coinflip = random.random()
+        if not_so_coinflip < patient_prob:
+            new_patients += 1
+        else:
+            break
+
+    print(new_patients)
+    patient_generation(new_patients)
+
+def patient_generation(new_patients):
+    patients = []
+    for patient in range(new_patients):
+            patient_type = random.choices([1, 2, 3, 4],
+            weights=[0.05, 0.20, 0.50, 0.25],
+            k=1
+            )[0]
+            patients.append(patient_type)
+    print(patients)
+    return patients
