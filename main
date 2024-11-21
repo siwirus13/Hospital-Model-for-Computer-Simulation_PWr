@@ -3,7 +3,7 @@ import random
 # Zmienne globalne
 patient_prob = 0.7
 beds = 10
-endtime = 100
+endtime = 250
 
 # Liczniki globalne
 hospitalized = []
@@ -30,7 +30,7 @@ def patient_generation(new_patients):
             weights=[0.25, 0.50, 0.20, 0.05],
             k=1
         )[0]
-        patients.append([patient_type])  # Użyj listy zamiast krotki
+        patients.append([patient_type, 0, 0])
     return patients
 
 
@@ -38,33 +38,40 @@ def state_change():
     global recoveries, deaths
 
     for patient in hospitalized:
+        patient[1]+=1
         if patient[0] == 'green':
             if random.random() < 0.1:
                 patient[0] = 'yellow'  # getting worse
+                print("Patient is getting worse")
             elif random.random() < 0.3:
                 recoveries += 1  # recovering
+                print("Patient is recovering")
                 hospitalized.remove(patient)
         elif patient[0] == 'yellow':
             if random.random() < 0.3:
                 patient[0] = 'orange'  # getting worse
+                print("Patient is getting worse")
             elif random.random() < 0.6:
                 patient[0] = 'green'  # getting better
                 print("Patient is getting better")
         elif patient[0] == 'orange':
             if random.random() < 0.4:
                 patient[0] = 'red'  # getting worse
+                print("Patient is getting worse")
             elif random.random() < 0.7:
                 patient[0] = 'yellow'  # getting better
                 print("Patient is getting better")
         elif patient[0] == 'red':
             if random.random() < 0.5:
                 deaths += 1  # dying
+                print("Patient is dying")
                 hospitalized.remove(patient)
             elif random.random() < 0.8:
                 patient[0] = 'orange'  # getting better
                 print("Patient is getting better")
 
     for patient in waiting:
+        patient[2]=patient[2]+1
         if patient[0] == 'green':
             if random.random() < 0.1:
                 patient[0] = 'yellow'  # getting worse
@@ -74,34 +81,48 @@ def state_change():
         elif patient[0] == 'yellow':
             if random.random() < 0.3:
                 patient[0] = 'orange'  # getting worse
+                print("Patient is getting worse")
             elif random.random() < 0.6:
                 patient[0] = 'green'  # getting better
                 print("Patient is getting better")
         elif patient[0] == 'orange':
             if random.random() < 0.4:
                 patient[0] = 'red'  # getting worse
+                print("Patient is getting worse")
             elif random.random() < 0.7:
                 patient[0] = 'yellow'  # getting better
                 print("Patient is getting better")
         elif patient[0] == 'red':
             if random.random() < 0.5:
                 deaths += 1  # dying
+                print("Patient is dying")
                 waiting.remove(patient)
+
+def queue_ordering():
+    global hospitalized, waiting
+    priority_order = {'red': 0, 'orange': 1, 'yellow': 2, 'green': 3}
+    waiting.sort(key=lambda patient: priority_order[patient[0]])
+
+
 
 
 def simulation(endtime, beds, patient_prob):
     global recoveries, deaths
 
-    for time in range(endtime):
+    for time in range(endtime):  # Main loop
         print(f"\nTime step {time + 1}:")
-        state_change()
-        new_patients = ambulanse(patient_prob)
-
-        for patient in new_patients:
+        state_change()  # State change for all patients
+        new_patients = ambulanse(patient_prob)  # New patients
+        waiting.extend(new_patients) # Add new patients to waiting list
+        queue_ordering() # Order the waiting list with priority
+        
+        for patient in waiting: # Hospitalize patients
             if len(hospitalized) < beds:
                 hospitalized.append(patient)
+                waiting.remove(patient)
             else:
-                waiting.append(patient)
+                break
+
 
         print(f"Hospitalized: {hospitalized}")
         print(f"Waiting: {waiting}")
