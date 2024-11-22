@@ -2,7 +2,7 @@ import random
 
 # Zmienne globalne
 patient_prob = 0.7
-beds = 10
+beds = 20
 endtime = 250
 
 # Liczniki globalne
@@ -36,74 +36,96 @@ def patient_generation(new_patients):
 
 def state_change():
     global recoveries, deaths
+    worsened = 0
+    bettered = 0
+    unchanged = 0
 
     for patient in hospitalized:
         patient[1]+=1
         if patient[0] == 'green':
             if random.random() < 0.1:
                 patient[0] = 'yellow'  # getting worse
-                print("Patient is getting worse")
+                worsened += 1
             elif random.random() < 0.3:
                 recoveries += 1  # recovering
-                print("Patient is recovering")
+                bettered += 1
                 hospitalized.remove(patient)
+            else:
+                unchanged += 1
         elif patient[0] == 'yellow':
             if random.random() < 0.3:
                 patient[0] = 'orange'  # getting worse
-                print("Patient is getting worse")
+                worsened += 1
             elif random.random() < 0.6:
                 patient[0] = 'green'  # getting better
-                print("Patient is getting better")
+                bettered += 1
+            else:
+                unchanged += 1
         elif patient[0] == 'orange':
             if random.random() < 0.4:
                 patient[0] = 'red'  # getting worse
-                print("Patient is getting worse")
+                worsened += 1
             elif random.random() < 0.7:
                 patient[0] = 'yellow'  # getting better
-                print("Patient is getting better")
+                bettered += 1
+            else:
+                unchanged += 1
         elif patient[0] == 'red':
             if random.random() < 0.5:
                 deaths += 1  # dying
-                print("Patient is dying")
+                worsened += 1
                 hospitalized.remove(patient)
             elif random.random() < 0.8:
                 patient[0] = 'orange'  # getting better
-                print("Patient is getting better")
+                bettered += 1
+            else:
+                unchanged += 1
 
     for patient in waiting:
         patient[2]=patient[2]+1
         if patient[0] == 'green':
             if random.random() < 0.1:
                 patient[0] = 'yellow'  # getting worse
+                worsened += 1
             elif random.random() < 0.3:
                 recoveries += 1  # recovering
+                bettered += 1
                 waiting.remove(patient)
+            else:
+                unchanged += 1
         elif patient[0] == 'yellow':
             if random.random() < 0.3:
                 patient[0] = 'orange'  # getting worse
-                print("Patient is getting worse")
+                worsened += 1
             elif random.random() < 0.6:
                 patient[0] = 'green'  # getting better
-                print("Patient is getting better")
+                bettered += 1
+            else:
+                unchanged += 1
         elif patient[0] == 'orange':
             if random.random() < 0.4:
                 patient[0] = 'red'  # getting worse
-                print("Patient is getting worse")
+                worsened += 1
             elif random.random() < 0.7:
                 patient[0] = 'yellow'  # getting better
-                print("Patient is getting better")
+                bettered += 1
+            else:
+                unchanged += 1
         elif patient[0] == 'red':
             if random.random() < 0.5:
                 deaths += 1  # dying
-                print("Patient is dying")
+                worsened += 1
                 waiting.remove(patient)
+            else:
+                unchanged += 1
+
+    print(f"Bettered: {bettered}, Worsened: {worsened}, Unchanged: {unchanged}")
+
 
 def queue_ordering():
     global hospitalized, waiting
     priority_order = {'red': 0, 'orange': 1, 'yellow': 2, 'green': 3}
     waiting.sort(key=lambda patient: priority_order[patient[0]])
-
-
 
 
 def simulation(endtime, beds, patient_prob):
@@ -115,7 +137,7 @@ def simulation(endtime, beds, patient_prob):
         new_patients = ambulanse(patient_prob)  # New patients
         waiting.extend(new_patients) # Add new patients to waiting list
         queue_ordering() # Order the waiting list with priority
-        
+
         for patient in waiting: # Hospitalize patients
             if len(hospitalized) < beds:
                 hospitalized.append(patient)
