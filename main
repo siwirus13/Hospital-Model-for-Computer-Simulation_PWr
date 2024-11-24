@@ -4,6 +4,7 @@ import random
 patient_prob = 0.7
 beds = 20
 endtime = 250
+random.seed(42)
 
 # Liczniki globalne
 hospitalized = []
@@ -46,7 +47,7 @@ def state_change():
             if random.random() < 0.1:
                 patient[0] = 'yellow'  # getting worse
                 worsened += 1
-            elif random.random() < 0.3:
+            elif random.random() < 0.7:  # patient with green label is more likely to get from the hospital much quicker
                 recoveries += 1  # recovering
                 bettered += 1
                 hospitalized.remove(patient)
