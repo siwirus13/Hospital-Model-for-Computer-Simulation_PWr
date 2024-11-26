@@ -1,10 +1,10 @@
 import random
 
 # Zmienne globalne
-patient_prob = 0.7
-beds = 20
+patient_prob = 0.75
+beds = 40
 endtime = 250
-random.seed(42)
+random.seed(43)
 
 # Liczniki globalne
 hospitalized = []
@@ -144,10 +144,11 @@ def simulation(endtime, beds, patient_prob):
                 hospitalized.append(patient)
                 waiting.remove(patient)
             else:
-                break
+                continue
 
 
         print(f"Hospitalized: {hospitalized}")
+        print("Capacity: ", len(hospitalized), "/", beds)
         print(f"Waiting: {waiting}")
         print(f"Recoveries: {recoveries}, Deaths: {deaths}")
 
