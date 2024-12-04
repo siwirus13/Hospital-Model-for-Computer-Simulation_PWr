@@ -1,0 +1,343 @@
+import random
+
+
+def ambulanse(patient_prob):
+    new_patients = 0
+    while True:
+        if random.random() < patient_prob:
+            new_patients += 1
+        else:
+            break
+    return single_patient_generation(new_patients)
+
+
+def single_patient_generation(new_patients):
+    patients = []
+    for _ in range(new_patients):
+        patient_type = random.choices(
+            ['green', 'yellow', 'orange', 'red'],
+            weights=[0.25, 0.50, 0.20, 0.05],
+            k=1
+        )[0]
+        patients.append([patient_type, 0, 0])
+
+    return patients
+
+
+def all_patients_generation(endtime, patient_prob):
+    generated_patients = []
+    for time in range(endtime):
+        new_patients = ambulanse(patient_prob)
+        generated_patients.append(new_patients)
+    return generated_patients
+
+
+def state_change(hospitalized, waiting, recoveries, deaths):
+    worsened = 0
+    bettered = 0
+    unchanged = 0
+
+    for patient in hospitalized[:]:
+
+            patient[1] += 1
+            if patient[0] == 'green':
+                if random.random() < 0.1:
+                    patient[0] = 'yellow'  # getting worse
+                    worsened += 1
+                elif random.random() < 0.7:
+                    recoveries += 1  # recovering
+                    bettered += 1
+                    hospitalized.remove(patient)
+                else:
+                    unchanged += 1
+            elif patient[0] == 'yellow':
+                if random.random() < 0.3:
+                    patient[0] = 'orange'
+                    worsened += 1
+                elif random.random() < 0.6:
+                    patient[0] = 'green'
+                    bettered += 1
+                else:
+                    unchanged += 1
+            elif patient[0] == 'orange':
+                if random.random() < 0.4:
+                    patient[0] = 'red'
+                    worsened += 1
+                elif random.random() < 0.7:
+                    patient[0] = 'yellow'
+                    bettered += 1
+                else:
+                    unchanged += 1
+            elif patient[0] == 'red':
+                if random.random() < 0.5:
+                    deaths += 1
+                    worsened += 1
+                    hospitalized.remove(patient)
+                elif random.random() < 0.8:
+                    patient[0] = 'orange'
+                    bettered += 1
+                else:
+                    unchanged += 1
+
+    for patient in waiting[:]:
+        patient[2] += 1
+        if patient[0] == 'green':
+            if random.random() < 0.1:
+                patient[0] = 'yellow'
+                worsened += 1
+            elif random.random() < 0.3:
+                recoveries += 1
+                bettered += 1
+                waiting.remove(patient)
+            else:
+                unchanged += 1
+        elif patient[0] == 'yellow':
+            if random.random() < 0.3:
+                patient[0] = 'orange'
+                worsened += 1
+            elif random.random() < 0.6:
+                patient[0] = 'green'
+                bettered += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'orange':
+            if random.random() < 0.4:
+                patient[0] = 'red'
+                worsened += 1
+            elif random.random() < 0.7:
+                patient[0] = 'yellow'
+                bettered += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'red':
+            if random.random() < 0.5:
+                deaths += 1
+                worsened += 1
+                waiting.remove(patient)
+            else:
+                unchanged += 1
+
+    return hospitalized, waiting, recoveries, deaths
+
+
+def state_change2(hospitalized, waiting, recoveries, deaths):
+    worsened = 0
+    bettered = 0
+    unchanged = 0
+    for beds in hospitalized:
+        for patient in beds[:]:
+
+            patient[1] += 1
+            if patient[0] == 'green':
+                if random.random() < 0.1:
+                    patient[0] = 'yellow'  # getting worse
+                    worsened += 1
+                elif random.random() < 0.7:
+                    recoveries += 1  # recovering
+                    bettered += 1
+                    beds.remove(patient)
+                else:
+                    unchanged += 1
+            elif patient[0] == 'yellow':
+                if random.random() < 0.3:
+                    patient[0] = 'orange'
+                    worsened += 1
+                elif random.random() < 0.6:
+                    patient[0] = 'green'
+                    bettered += 1
+                else:
+                    unchanged += 1
+            elif patient[0] == 'orange':
+                if random.random() < 0.4:
+                    patient[0] = 'red'
+                    worsened += 1
+                elif random.random() < 0.7:
+                    patient[0] = 'yellow'
+                    bettered += 1
+                else:
+                    unchanged += 1
+            elif patient[0] == 'red':
+                if random.random() < 0.5:
+                    deaths += 1
+                    worsened += 1
+                    beds.remove(patient)
+                elif random.random() < 0.8:
+                    patient[0] = 'orange'
+                    bettered += 1
+                else:
+                    unchanged += 1
+
+    for patient in waiting[:]:
+        patient[2] += 1
+        if patient[0] == 'green':
+            if random.random() < 0.1:
+                patient[0] = 'yellow'
+                worsened += 1
+            elif random.random() < 0.3:
+                recoveries += 1
+                bettered += 1
+                waiting.remove(patient)
+            else:
+                unchanged += 1
+        elif patient[0] == 'yellow':
+            if random.random() < 0.3:
+                patient[0] = 'orange'
+                worsened += 1
+            elif random.random() < 0.6:
+                patient[0] = 'green'
+                bettered += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'orange':
+            if random.random() < 0.4:
+                patient[0] = 'red'
+                worsened += 1
+            elif random.random() < 0.7:
+                patient[0] = 'yellow'
+                bettered += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'red':
+            if random.random() < 0.5:
+                deaths += 1
+                worsened += 1
+                waiting.remove(patient)
+            else:
+                unchanged += 1
+
+    return hospitalized, waiting, recoveries, deaths
+
+def queue_ordering(waiting):
+    priority_order = {'red': 0, 'orange': 1, 'yellow': 2, 'green': 3}
+    waiting.sort(key=lambda patient: priority_order[patient[0]])
+
+
+def Triage_model(beds, endtime, patient_prob):
+    generated_patients = all_patients_generation(endtime, patient_prob)
+    hospitalized = []
+    waiting = []
+    deaths = 0
+    recoveries = 0
+    timecounter = 0
+
+    for arrived_patients in generated_patients:
+        timecounter += 1
+        hospitalized, waiting, recoveries, deaths = state_change(hospitalized, waiting, recoveries, deaths)
+        waiting.extend(arrived_patients)
+        queue_ordering(waiting)
+
+        for patient in waiting[:]:
+            if len(hospitalized) < beds:
+                hospitalized.append(patient)
+                waiting.remove(patient)
+
+        print("-----------------------------")
+        print(f"Time: {timecounter}")
+        print(f"Hospitalized: {hospitalized}")
+        print("Capacity: ", len(hospitalized), "/", beds)
+        print(f"Waiting: {waiting}")
+        print(f"Recoveries: {recoveries}, Deaths: {deaths}")
+        print("-----------------------------")
+
+
+def Resource_Allocation_model(endtime, red_beds, orange_beds, yellow_beds, green_beds, patient_prob):
+    generated_patients = all_patients_generation(endtime, patient_prob)
+    occupied_red_beds = []
+    occupied_orange_beds = []
+    occupied_yellow_beds = []
+    occupied_green_beds = []
+    hospitalized = [occupied_red_beds, occupied_orange_beds, occupied_yellow_beds, occupied_green_beds]
+    waiting = []
+    deaths = 0
+    recoveries = 0
+    timecounter = 0
+
+    for arrived_patients in generated_patients:
+        timecounter += 1
+        hospitalized, waiting, recoveries, deaths = state_change2(hospitalized, waiting, recoveries, deaths)
+        waiting.extend(arrived_patients)
+        queue_ordering(waiting)
+
+        for patient in waiting[:]:  # Hospitalize patients
+            if patient[0] == 'red':
+                if len(occupied_red_beds) < red_beds:
+                    occupied_red_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_orange_beds) < orange_beds:
+                    occupied_orange_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_yellow_beds) < yellow_beds:
+                    occupied_yellow_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_green_beds) < green_beds:
+                    occupied_green_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                else:
+                    continue
+
+            elif patient[0] == 'orange':
+                if len(occupied_orange_beds) < orange_beds:
+                    occupied_orange_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_yellow_beds) < yellow_beds:
+                    occupied_yellow_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_green_beds) < green_beds:
+                    occupied_green_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                else:
+                    continue
+
+            elif patient[0] == 'yellow':
+                if len(occupied_yellow_beds) < yellow_beds:
+                    occupied_yellow_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                elif len(occupied_green_beds) < green_beds:
+                    occupied_green_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                else:
+                    continue
+            elif patient[0] == 'green':
+                if len(occupied_green_beds) < green_beds:
+                    occupied_green_beds.append(patient)
+                    waiting.remove(patient)
+                    continue
+                else:
+                    continue
+        print("-----------------------------")
+        print(f"Time: {timecounter}")
+        print(f"Hospitalized: Red Beds: {hospitalized[0]}, Orange Beds: {hospitalized[1]}, Yellow Beds: {hospitalized[2]}, Green Beds: {hospitalized[3]}")
+        print(f"Capacity: Red Beds: {len(occupied_red_beds)} / {red_beds},")
+        print(f"Capacity: Orange Beds: {len(occupied_orange_beds)} / {orange_beds},")
+        print(f"Capacity: Yellow Beds: {len(occupied_yellow_beds)} / {yellow_beds}, ")
+        print(f"Capacity: Green Beds: {len(occupied_green_beds)} / {green_beds}")
+        print(f"Waiting: {waiting}")
+        print(f"Recoveries: {recoveries}, Deaths: {deaths}")
+        print("-----------------------------")
+
+
+
+
+def main(seed, patient_prob, endtime, model, red_beds, orange_beds, yellow_beds, green_beds):
+    random.seed(seed)
+
+    if model == 'Triage':
+        Triage_model(red_beds + orange_beds + yellow_beds + green_beds, endtime, patient_prob)
+    elif model == 'Resource Allocation':
+        Resource_Allocation_model(endtime, red_beds, orange_beds, yellow_beds, green_beds, patient_prob)
+    else:
+        print('Invalid model')
+
+
+# Wywołanie funkcji main
+main(43, 0.75, 250, 'Resource Allocation', 10, 10, 10, 10)
+main(43, 0.75, 250, 'Triage', 40, 0, 0, 0)
