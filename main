@@ -1,4 +1,5 @@
 import random
+import math
 
 
 def ambulanse(patient_prob):
@@ -16,7 +17,7 @@ def single_patient_generation(new_patients):
     for _ in range(new_patients):
         patient_type = random.choices(
             ['green', 'yellow', 'orange', 'red'],
-            weights=[0.25, 0.50, 0.20, 0.05],
+            weights=[0.35, 0.25, 0.25, 0.15],
             k=1
         )[0]
         patients.append([patient_type, 0, 0])
@@ -32,85 +33,103 @@ def all_patients_generation(endtime, patient_prob):
     return generated_patients
 
 
+
 def state_change(hospitalized, waiting, recoveries, deaths):
     worsened = 0
     bettered = 0
     unchanged = 0
 
+    # Przetwarzanie pacjentów hospitalizowanych
     for patient in hospitalized[:]:
+        patient[1] += 1  # Czas spędzony w szpitalu rośnie
+        generated_prob = random.random()
 
-            patient[1] += 1
-            if patient[0] == 'green':
-                if random.random() < 0.1:
-                    patient[0] = 'yellow'  # getting worse
-                    worsened += 1
-                elif random.random() < 0.7:
-                    recoveries += 1  # recovering
-                    bettered += 1
-                    hospitalized.remove(patient)
-                else:
-                    unchanged += 1
-            elif patient[0] == 'yellow':
-                if random.random() < 0.3:
-                    patient[0] = 'orange'
-                    worsened += 1
-                elif random.random() < 0.6:
-                    patient[0] = 'green'
-                    bettered += 1
-                else:
-                    unchanged += 1
-            elif patient[0] == 'orange':
-                if random.random() < 0.4:
-                    patient[0] = 'red'
-                    worsened += 1
-                elif random.random() < 0.7:
-                    patient[0] = 'yellow'
-                    bettered += 1
-                else:
-                    unchanged += 1
-            elif patient[0] == 'red':
-                if random.random() < 0.5:
-                    deaths += 1
-                    worsened += 1
-                    hospitalized.remove(patient)
-                elif random.random() < 0.8:
-                    patient[0] = 'orange'
-                    bettered += 1
-                else:
-                    unchanged += 1
+        # Logarytmiczne prawdopodobieństwo w zależności od czasu spędzonego w szpitalu
+        time_factor = math.log(patient[1] + 1) / 10  # Skala logarytmu
 
-    for patient in waiting[:]:
-        patient[2] += 1
-        if patient[0] == 'green':
-            if random.random() < 0.1:
-                patient[0] = 'yellow'
-                worsened += 1
-            elif random.random() < 0.3:
+        # Obniżenie prawdopodobieństwa dla pacjentów hospitalizowanych (poza zielonymi), zależnie od czasu w kolejce
+        if patient[0] != 'green':
+            time_in_queue_factor = patient[2] * 0.01  # Możemy dostosować współczynnik 0.01, aby był odpowiedni
+            time_factor -= time_in_queue_factor  # Obniżamy prawdopodobieństwo w zależności od czasu w kolejce
+
+        if patient[0] == 'green':  # Green patients cannot worsen
+            prob_of_recovery = 0.5 + time_factor  # Prawdopodobieństwo rośnie z czasem
+            prob_of_worsening = 0
+
+            if generated_prob >= 1 - prob_of_recovery:
                 recoveries += 1
                 bettered += 1
-                waiting.remove(patient)
+                hospitalized.remove(patient)
             else:
                 unchanged += 1
         elif patient[0] == 'yellow':
-            if random.random() < 0.3:
+            prob_of_recovery = 0.3 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+            prob_of_worsening = 0.1 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob <= prob_of_worsening:
                 patient[0] = 'orange'
                 worsened += 1
-            elif random.random() < 0.6:
+            elif generated_prob >= 1 - prob_of_recovery:
                 patient[0] = 'green'
                 bettered += 1
             else:
                 unchanged += 1
         elif patient[0] == 'orange':
-            if random.random() < 0.4:
+            prob_of_recovery = 0.1 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+            prob_of_worsening = 0.15 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob <= prob_of_worsening:
                 patient[0] = 'red'
                 worsened += 1
-            elif random.random() < 0.7:
+            elif generated_prob <= 1 - prob_of_recovery:
                 patient[0] = 'yellow'
                 bettered += 1
             else:
                 unchanged += 1
         elif patient[0] == 'red':
-            if random.random() < 0.5:
+            prob_of_recovery = 0.05 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+            prob_of_worsening = 0.35 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
+                deaths += 1
+                worsened += 1
+                hospitalized.remove(patient)
+            elif generated_prob < 1 - prob_of_recovery:
+                patient[0] = 'orange'
+                bettered += 1
+            else:
+                unchanged += 1
+
+    # Przetwarzanie pacjentów w poczekalni
+    for patient in waiting[:]:
+        generated_prob = random.random()
+        patient[2] += 1  # Czas spędzony w poczekalni rośnie
+
+        # Logarytmiczne prawdopodobieństwo w zależności od czasu spędzonego w poczekalni
+        time_factor = math.log(patient[2] + 1) / 10  # Skala logarytmu
+
+        if patient[0] == 'green':
+            unchanged += 1
+        elif patient[0] == 'yellow':
+            prob_of_worsening = 0.1 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
+                patient[0] = 'orange'
+                worsened += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'orange':
+            prob_of_worsening = 0.15 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
+                patient[0] = 'red'
+                worsened += 1
+            else:
+                unchanged += 1
+        elif patient[0] == 'red':
+            prob_of_worsening = 0.35 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
                 deaths += 1
                 worsened += 1
                 waiting.remove(patient)
@@ -124,81 +143,98 @@ def state_change2(hospitalized, waiting, recoveries, deaths):
     worsened = 0
     bettered = 0
     unchanged = 0
+
     for beds in hospitalized:
         for patient in beds[:]:
+            patient[1] += 1  # Czas spędzony w szpitalu rośnie
+            generated_prob = random.random()
 
-            patient[1] += 1
-            if patient[0] == 'green':
-                if random.random() < 0.1:
-                    patient[0] = 'yellow'  # getting worse
-                    worsened += 1
-                elif random.random() < 0.7:
-                    recoveries += 1  # recovering
+            # Logarytmiczne prawdopodobieństwo w zależności od czasu spędzonego w szpitalu
+            time_factor = math.log(patient[1] + 1) / 10  # Skala logarytmu
+
+            # Obniżenie prawdopodobieństwa dla pacjentów hospitalizowanych (poza zielonymi), zależnie od czasu w kolejce
+            if patient[0] != 'green':
+                time_in_queue_factor = patient[2] * 0.01  # Możemy dostosować współczynnik 0.01, aby był odpowiedni
+                time_factor -= time_in_queue_factor  # Obniżamy prawdopodobieństwo w zależności od czasu w kolejce
+
+            if patient[0] == 'green':  # Green patients cannot worsen
+                prob_of_recovery = 0.5 + time_factor  # Prawdopodobieństwo rośnie z czasem
+                prob_of_worsening = 0
+
+                if generated_prob >= 1 - prob_of_recovery:
+                    recoveries += 1
                     bettered += 1
                     beds.remove(patient)
                 else:
                     unchanged += 1
             elif patient[0] == 'yellow':
-                if random.random() < 0.3:
+                prob_of_recovery = 0.3 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+                prob_of_worsening = 0.1 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+                if generated_prob <= prob_of_worsening:
                     patient[0] = 'orange'
                     worsened += 1
-                elif random.random() < 0.6:
+                elif generated_prob >= 1 - prob_of_recovery:
                     patient[0] = 'green'
                     bettered += 1
                 else:
                     unchanged += 1
             elif patient[0] == 'orange':
-                if random.random() < 0.4:
+                prob_of_recovery = 0.1 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+                prob_of_worsening = 0.15 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+                if generated_prob <= prob_of_worsening:
                     patient[0] = 'red'
                     worsened += 1
-                elif random.random() < 0.7:
+                elif generated_prob <= 1 - prob_of_recovery:
                     patient[0] = 'yellow'
                     bettered += 1
                 else:
                     unchanged += 1
             elif patient[0] == 'red':
-                if random.random() < 0.5:
+                prob_of_recovery = 0.05 + time_factor  # Prawdopodobieństwo poprawy rośnie z czasem
+                prob_of_worsening = 0.35 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+                if generated_prob < prob_of_worsening:
                     deaths += 1
                     worsened += 1
                     beds.remove(patient)
-                elif random.random() < 0.8:
+                elif generated_prob < 1 - prob_of_recovery:
                     patient[0] = 'orange'
                     bettered += 1
                 else:
                     unchanged += 1
 
+    # Przetwarzanie pacjentów w poczekalni
     for patient in waiting[:]:
-        patient[2] += 1
+        generated_prob = random.random()
+        patient[2] += 1  # Czas spędzony w poczekalni rośnie
+
+        # Logarytmiczne prawdopodobieństwo w zależności od czasu spędzonego w poczekalni
+        time_factor = math.log(patient[2] + 1) / 10  # Skala logarytmu
+
         if patient[0] == 'green':
-            if random.random() < 0.1:
-                patient[0] = 'yellow'
-                worsened += 1
-            elif random.random() < 0.3:
-                recoveries += 1
-                bettered += 1
-                waiting.remove(patient)
-            else:
-                unchanged += 1
+            unchanged += 1
         elif patient[0] == 'yellow':
-            if random.random() < 0.3:
+            prob_of_worsening = 0.1 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
                 patient[0] = 'orange'
                 worsened += 1
-            elif random.random() < 0.6:
-                patient[0] = 'green'
-                bettered += 1
             else:
                 unchanged += 1
         elif patient[0] == 'orange':
-            if random.random() < 0.4:
+            prob_of_worsening = 0.15 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
                 patient[0] = 'red'
                 worsened += 1
-            elif random.random() < 0.7:
-                patient[0] = 'yellow'
-                bettered += 1
             else:
                 unchanged += 1
         elif patient[0] == 'red':
-            if random.random() < 0.5:
+            prob_of_worsening = 0.35 + time_factor  # Prawdopodobieństwo pogorszenia rośnie z czasem
+
+            if generated_prob < prob_of_worsening:
                 deaths += 1
                 worsened += 1
                 waiting.remove(patient)
@@ -235,7 +271,7 @@ def Triage_model(beds, endtime, patient_prob):
         print(f"Time: {timecounter}")
         print(f"Hospitalized: {hospitalized}")
         print("Capacity: ", len(hospitalized), "/", beds)
-        print(f"Waiting: {waiting}")
+        #print(f"Waiting: {waiting}")
         print(f"Recoveries: {recoveries}, Deaths: {deaths}")
         print("-----------------------------")
 
@@ -320,7 +356,7 @@ def Resource_Allocation_model(endtime, red_beds, orange_beds, yellow_beds, green
         print(f"Capacity: Orange Beds: {len(occupied_orange_beds)} / {orange_beds},")
         print(f"Capacity: Yellow Beds: {len(occupied_yellow_beds)} / {yellow_beds}, ")
         print(f"Capacity: Green Beds: {len(occupied_green_beds)} / {green_beds}")
-        print(f"Waiting: {waiting}")
+        #print(f"Waiting: {waiting}")
         print(f"Recoveries: {recoveries}, Deaths: {deaths}")
         print("-----------------------------")
 
@@ -339,5 +375,6 @@ def main(seed, patient_prob, endtime, model, red_beds, orange_beds, yellow_beds,
 
 
 # Wywołanie funkcji main
-main(43, 0.75, 250, 'Resource Allocation', 10, 10, 10, 10)
-main(43, 0.75, 250, 'Triage', 40, 0, 0, 0)
+
+main(10, 0.83, 1000, 'Triage', 40, 0, 0, 0)
+main(10, 0.83, 1000, 'Resource Allocation', 15, 9, 9, 7)
