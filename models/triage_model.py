@@ -22,6 +22,11 @@ class TriageModel(SORModel):
         while len(self.hospitalized) < self.beds and self.waiting:
             self.hospitalized.append(self.waiting.pop(0))
 
+    # def state_change(self):
+    #     Define the state change logic here, because it is different from the one in resource_allocation_model.py, so it shouldn't be inherited from SORModel
+   
+
+
     def report(self):
         print("Triage Results:")
         print(f"Recoveries: {self.recoveries}, Deaths: {self.deaths}, Still in hospital: {len(self.waiting)+len(self.hospitalized)}")
