@@ -43,18 +43,6 @@ class SORModel(ABC):
                     break
             return new_patients
 
-    def assign_beds(self):
-        while True:
-            if len(self.hospitalized) < self.beds and self.waiting[:]:
-                self.hospitalized.append(self.waiting.pop(0))
-                print(f"Patient assigned to bed.")
-            else:
-                continue
-
-
-
-
-
 
     def state_change(self):
         # Aktualizowanie stanu pacjentów oczekujących
