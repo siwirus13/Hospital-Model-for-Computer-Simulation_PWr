@@ -1,5 +1,6 @@
 from models.triage_model import TriageModel
 from models.resource_allocation_model import ResourceAllocationModel
+import random
 
 class Simulation:
     def __init__(self, seed, patient_prob, endtime):
