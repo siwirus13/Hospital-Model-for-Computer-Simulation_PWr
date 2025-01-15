@@ -1,4 +1,6 @@
-from models.sor_model import SORModel
+
+from models.SOR_model import SORModel
+from models.patient import Patient
 
 class TriageModel(SORModel):
     def __init__(self, beds, *args, **kwargs):
@@ -6,15 +8,15 @@ class TriageModel(SORModel):
         self.beds = beds
 
     def run(self):
+
         for time in range(self.endtime):
-            self.generated_patients.extend(self.generate_patients())
+            self.generated_patients.extend(self.generate_patients(self.ambulanse(self.patient_prob, self.endtime)))
+            for patient in self.generated_patients[:]:
+                self.waiting.append(patient)
+                self.generated_patients.remove(patient)
             self.state_change()
             self.assign_beds()
         self.report()
-
-    def state_change(self):
-        # Implement logic for state change
-        pass
 
     def assign_beds(self):
         while len(self.hospitalized) < self.beds and self.waiting:
@@ -22,6 +24,6 @@ class TriageModel(SORModel):
 
     def report(self):
         print("Triage Results:")
-        print(f"Recoveries: {self.recoveries}, Deaths: {self.deaths}")
+        print(f"Recoveries: {self.recoveries}, Deaths: {self.deaths}, Still in hospital: {len(self.waiting)+len(self.hospitalized)}")
         print(f"Resources used: {self.resources_used}")
 
