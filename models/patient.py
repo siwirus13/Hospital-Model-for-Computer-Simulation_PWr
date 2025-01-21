@@ -42,5 +42,3 @@ class Patient:
 
         elif random_value < prob_worsen + prob_improve:
             self.improve()
-
-
