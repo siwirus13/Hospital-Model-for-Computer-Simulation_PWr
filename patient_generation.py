@@ -16,7 +16,7 @@ class PatientGenerator:
         for time in range(self.endtime):
             new_patients = self.patients_by_hour[time]
             self.all_patients += len(new_patients)
-        print(f"For seed == {self.seed} and patient probabilty == {self.patient_prob}: \nTotal patients == {self.all_patients}")
+        print(f"For seed == {self.seed}, endtime == {self.endtime} and patient probabilty == {self.patient_prob}: \nTotal patients == {self.all_patients}")
         return self.patients_by_hour
 
 
