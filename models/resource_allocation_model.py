@@ -46,7 +46,7 @@ class ResourceAllocationModel(SORModel):
                     self.deaths += 1
                     patients.remove(patient)
 
-    def assign_beds(self):    # ZROBIĆ KURWA RECOVERY PENALTY ZA ŁÓŻKA W KOLORACH
+    def assign_beds(self): 
         for patient in self.waiting[:]:
             status = patient.health_status
 
