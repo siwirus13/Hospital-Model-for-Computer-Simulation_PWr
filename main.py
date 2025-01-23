@@ -14,4 +14,6 @@ def main():
     sim.run('Triage', beds=beds)
     print("\n")
     sim.run('Resource Allocation', red_beds=beds_colors[0], orange_beds=beds_colors[1], yellow_beds=beds_colors[2], green_beds=beds_colors[3])
-main()
+
+if __name__ == "__main__":
+    main()
