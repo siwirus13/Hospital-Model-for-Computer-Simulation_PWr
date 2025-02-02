@@ -1,5 +1,7 @@
 from models.SOR_model import SORModel
 from models.patient import Patient
+import csv
+import os
 
 class ResourceAllocationModel(SORModel):
     def __init__(self, endtime, patient_prob, hourly_patients=None, **kwargs):
@@ -46,7 +48,7 @@ class ResourceAllocationModel(SORModel):
                     self.deaths += 1
                     patients.remove(patient)
 
-    def assign_beds(self): 
+    def assign_beds(self):
         for patient in self.waiting[:]:
             status = patient.health_status
 
@@ -54,9 +56,52 @@ class ResourceAllocationModel(SORModel):
                 self.hospitalized[status].append(patient)
                 self.waiting.remove(patient)
 
-    def report(self):
+    def report(self, filename="resource_allocation_results.csv", sim_index=1):
+        file_exists = os.path.exists(filename)
 
-        print("Resource Allocation Results:")
-        print(f"Recoveries: {self.recoveries}")
-        print(f"Deaths: {self.deaths}")
-        print(f"Still in hospital ||| waiting: {len(self.hospitalized['green']) + len(self.hospitalized['orange']) + len(self.hospitalized['yellow'])+ len(self.hospitalized['red'])} ||| {len(self.waiting)}")
+        with open(filename, mode="a" if file_exists else "w", newline="") as file:
+            writer = csv.writer(file)
+
+            if not file_exists:
+                # Create headers only for the first simulation
+                writer.writerow(["Simulation index"] + [f"Sim {sim_index}"])
+                writer.writerow(["Recoveries"] + [self.recoveries])
+                writer.writerow(["Deaths"] + [self.deaths])
+                writer.writerow(["Hospitalized (Green)"] + [len(self.hospitalized['green'])])
+                writer.writerow(["Hospitalized (Yellow)"] + [len(self.hospitalized['yellow'])])
+                writer.writerow(["Hospitalized (Orange)"] + [len(self.hospitalized['orange'])])
+                writer.writerow(["Hospitalized (Red)"] + [len(self.hospitalized['red'])])
+                writer.writerow(["Total Hospitalized"] + [
+                    len(self.hospitalized['green']) + len(self.hospitalized['yellow']) +
+                    len(self.hospitalized['orange']) + len(self.hospitalized['red'])
+                ])
+                writer.writerow(["Waiting"] + [len(self.waiting)])
+                writer.writerow([])
+                writer.writerow(["Simulation Parameters"])
+                writer.writerow(["Patient Probability"] + [self.patient_prob])
+                writer.writerow(["End Time"] + [self.endtime])
+                writer.writerow(["Bed Distribution (R, O, Y, G)"] + [self.beds])
+            else:
+                # Read the existing CSV and update values
+                with open(filename, mode="r", newline="") as read_file:
+                    rows = list(csv.reader(read_file))
+
+                rows[0].append(f"Sim {sim_index}")  # Simulation index row
+                rows[1].append(self.recoveries)  # Recoveries row
+                rows[2].append(self.deaths)  # Deaths row
+                rows[3].append(len(self.hospitalized['green']))  # Green beds
+                rows[4].append(len(self.hospitalized['yellow']))  # Yellow beds
+                rows[5].append(len(self.hospitalized['orange']))  # Orange beds
+                rows[6].append(len(self.hospitalized['red']))  # Red beds
+                rows[7].append(len(self.hospitalized['green']) + len(self.hospitalized['yellow']) +
+                               len(self.hospitalized['orange']) + len(self.hospitalized['red']))  # Total hospitalized
+                rows[8].append(len(self.waiting))  # Waiting
+                rows[11].append(self.patient_prob)  # Patient Probability
+                rows[12].append(self.endtime)  # End Time
+                rows[13].append(self.beds)  # Bed distribution
+
+                with open(filename, mode="w", newline="") as write_file:
+                    writer = csv.writer(write_file)
+                    writer.writerows(rows)
+
+        print(f"Results appended to {filename}")
