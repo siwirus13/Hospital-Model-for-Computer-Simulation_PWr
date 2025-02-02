@@ -1,4 +1,6 @@
 from models.SOR_model import SORModel
+import csv
+import os
 
 class TriageModel(SORModel):
     def __init__(self, endtime, patient_prob, hourly_patients=None, **kwargs):
@@ -41,8 +43,37 @@ class TriageModel(SORModel):
         while len(self.hospitalized) < self.beds and self.waiting:
             self.hospitalized.append(self.waiting.pop(0))
 
-    def report(self):
-        print("Triage Results:")
-        print(f"Recoveries: {self.recoveries}")
-        print(f"Deaths: {self.deaths}")
-        print(f"Still in hospital ||| waiting: {len(self.hospitalized)} ||| {len(self.waiting)}")
+    def report(self, filename="triage_results.csv", sim_index=1):
+        file_exists = os.path.exists(filename)
+
+        with open(filename, mode="a" if file_exists else "w", newline="") as file:
+            writer = csv.writer(file)
+
+            if not file_exists:
+                writer.writerow(["Simulation index"] + [f"Sim {sim_index}"])
+                writer.writerow(["Recoveries"] + [self.recoveries])  # Make sure this appears in the first write
+                writer.writerow(["Deaths"] + [self.deaths])
+                writer.writerow([])
+                writer.writerow(["Simulation Parameters"])
+                writer.writerow(["Patient Probability"] + [self.patient_prob])
+                writer.writerow(["End Time"] + [self.endtime])
+                writer.writerow(["Total Beds"] + [self.beds])
+            else:
+                with open(filename, mode="r", newline="") as read_file:
+                    rows = list(csv.reader(read_file))
+
+                rows[0].append(f"Sim {sim_index}")  # First row: Simulation index
+                rows[1].append(self.recoveries)  # Second row: Recoveries (Make sure this is on row 1)
+                rows[2].append(self.deaths)  # Third row: Deaths
+                rows[5].append(self.patient_prob)  # Patient Probability
+                rows[6].append(self.endtime)  # End Time
+                rows[7].append(self.beds)  # Total Beds
+
+                with open(filename, mode="w", newline="") as write_file:
+                    writer = csv.writer(write_file)
+                    writer.writerows(rows)
+
+        print(f"Results appended to {filename}")
+
+
+
